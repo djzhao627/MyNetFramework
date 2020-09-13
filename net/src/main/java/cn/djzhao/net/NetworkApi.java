@@ -15,6 +15,11 @@ public class NetworkApi {
 
     private static final String TAG = "NetworkApi";
 
+    public static INetworkRequiredInfo networkRequiredInfo;
+    public static void init(INetworkRequiredInfo iNetworkRequiredInfo) {
+        networkRequiredInfo = iNetworkRequiredInfo;
+    }
+
     public static void getWeather(String city, String key) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://restapi.amap.com")
