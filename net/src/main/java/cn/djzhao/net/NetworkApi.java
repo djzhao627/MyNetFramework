@@ -1,75 +1,88 @@
 package cn.djzhao.net;
 
-import android.util.Log;
+import java.util.HashMap;
+import java.util.Map;
 
-import cn.djzhao.net.api.WeatherApiInterface;
-import cn.djzhao.net.bean.Weather;
+import cn.djzhao.net.error.HttpError;
 import cn.djzhao.net.interceptor.CommonRequestInterceptor;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.ObservableTransformer;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class NetworkApi {
+public abstract class NetworkApi {
 
     private static final String TAG = "NetworkApi";
 
     public static INetworkRequiredInfo networkRequiredInfo;
     private static OkHttpClient okHttpClient;
 
+    private static Map<String, Retrofit> retrofitMap = new HashMap<>();
+
     public static void init(INetworkRequiredInfo iNetworkRequiredInfo) {
         networkRequiredInfo = iNetworkRequiredInfo;
     }
 
-    public static void getWeather(String city, String key) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://restapi.amap.com")
-                .callFactory(getOkHttpClient())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+    /**
+     * 获取Retrofit服务
+     *
+     * @return Retrofit
+     */
+    protected Retrofit getService() {
+        Retrofit retrofit = retrofitMap.get(getBaseUrl());
+        if (retrofit == null) {
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(getBaseUrl())
+                    .callFactory(getOkHttpClient())
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+            retrofitMap.put(getBaseUrl(), retrofit);
+        }
+        return retrofit;
+    }
 
-        WeatherApiInterface weatherApiInterface = retrofit.create(WeatherApiInterface.class);
-        Observable<Weather> weather = weatherApiInterface.getWeather(city, key);
-        weather
-                // 在IO线程订阅
-                .subscribeOn(Schedulers.io())
-                // 在主线程处理
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Weather>() {
+    /**
+     * 订阅封装
+     *
+     * @param observer 订阅者
+     * @param <T>      类型
+     * @return observable
+     */
+    public <T> ObservableTransformer<T, T> subscribe(final Observer<T> observer) {
+        return new ObservableTransformer<T, T>() {
             @Override
-            public void onSubscribe(Disposable d) {
-
+            public ObservableSource<T> apply(Observable<T> upstream) {
+                Observable<T> observable = upstream.
+                        // io线程订阅
+                        subscribeOn(Schedulers.io())
+                        // 主线程观察
+                        .observeOn(AndroidSchedulers.mainThread());
+                // 添加自定义异常处理
+                if (getAppErrorHandler() != null) {
+                    observable = observable.map(NetworkApi.this.getAppErrorHandler());
+                }
+                // 统一异常处理
+                observable = observable.onErrorResumeNext(new HttpError<T>());
+                // 提交订阅
+                observable.subscribe(observer);
+                return observable;
             }
-
-            @Override
-            public void onNext(Weather value) {
-                Log.d(TAG, "onNext: " + value);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.d(TAG, "onError: " + e.getMessage());
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        });
-
+        };
     }
 
     /**
      * 获取OkHttpClient
      *
-     * @return
+     * @return OkHttpClient
      */
     public static OkHttpClient getOkHttpClient() {
         if (okHttpClient != null) {
@@ -87,4 +100,19 @@ public class NetworkApi {
         okHttpClient = builder.build();
         return okHttpClient;
     }
+
+    /**
+     * 获取BaseUrl
+     *
+     * @return BaseUrl
+     */
+    protected abstract String getBaseUrl();
+
+    /**
+     * 获取用户的错误处理器
+     *
+     * @param <T>
+     * @return
+     */
+    protected abstract <T> Function<T, T> getAppErrorHandler();
 }

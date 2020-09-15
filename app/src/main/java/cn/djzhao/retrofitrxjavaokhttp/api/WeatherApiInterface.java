@@ -1,8 +1,8 @@
-package cn.djzhao.net.api;
+package cn.djzhao.retrofitrxjavaokhttp.api;
 
 
-import cn.djzhao.net.bean.Weather;
-import io.reactivex.rxjava3.core.Observable;
+import cn.djzhao.retrofitrxjavaokhttp.bean.Weather;
+import io.reactivex.Observable;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 

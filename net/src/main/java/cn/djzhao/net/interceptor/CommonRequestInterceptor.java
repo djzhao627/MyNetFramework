@@ -18,6 +18,8 @@ public class CommonRequestInterceptor implements Interceptor {
         this.networkRequiredInfo = networkRequiredInfo;
     }
 
+
+
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();

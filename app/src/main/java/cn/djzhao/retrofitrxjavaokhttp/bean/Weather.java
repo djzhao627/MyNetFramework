@@ -1,6 +1,8 @@
-package cn.djzhao.net.bean;
+package cn.djzhao.retrofitrxjavaokhttp.bean;
 
 import java.util.List;
+
+import cn.djzhao.net.bean.BaseResponse;
 
 public class Weather extends BaseResponse {
 
@@ -35,6 +37,12 @@ public class Weather extends BaseResponse {
         }
     }
 
-
-
+    @Override
+    public String toString() {
+        return "Weather{" +
+                "count='" + count + '\'' +
+                ", infocode=" + infocode +
+                ", lives=" + lives +
+                '}';
+    }
 }
