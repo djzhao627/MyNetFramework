@@ -3,6 +3,7 @@ package cn.djzhao.net;
 import java.util.HashMap;
 import java.util.Map;
 
+import cn.djzhao.net.dns.AliDNS;
 import cn.djzhao.net.error.HttpError;
 import cn.djzhao.net.interceptor.CommonRequestInterceptor;
 import io.reactivex.Observable;
@@ -97,6 +98,8 @@ public abstract class NetworkApi {
         }
         // 添加通用请求拦截器
         builder.addInterceptor(new CommonRequestInterceptor(networkRequiredInfo));
+        // 添加阿里DNS
+        builder.dns(new AliDNS());
         okHttpClient = builder.build();
         return okHttpClient;
     }

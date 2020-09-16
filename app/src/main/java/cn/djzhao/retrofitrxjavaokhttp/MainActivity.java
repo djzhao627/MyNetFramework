@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "onClick: YES");
-                AMapNetworkApi.getService(WeatherApiInterface.class).getWeather("南京", "1ae6c53e2186f33bbf240a12d80672d1b")
+                AMapNetworkApi.getService(WeatherApiInterface.class).getWeather("南京", "ae6c53e2186f33bbf240a12d80672d1b")
                         .compose(AMapNetworkApi.getInstance().subscribe(new BaseObserver<Weather>() {
                             @Override
                             public void onSuccess(Weather weather) {

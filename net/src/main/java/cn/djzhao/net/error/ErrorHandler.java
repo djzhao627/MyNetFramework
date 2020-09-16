@@ -16,8 +16,10 @@ import retrofit2.HttpException;
 
 public class ErrorHandler {
 
+    /**
+     * 错误类型
+     */
     public static class ERROR {
-
         public static final int HTTP_ERROR = 1;
         public static final int NETWORK_ERROR = 2;
         public static final int SSL_ERROR = 3;
@@ -39,21 +41,55 @@ public class ErrorHandler {
         }
     }
 
+    /**
+     * 统一异常
+     */
     public static class ResponseThrowable extends Throwable {
-        public int code;
-        public String message;
+        private int code;
+        private String message;
 
         public ResponseThrowable(int code, @Nullable Throwable cause) {
             super(cause);
             this.code = code;
         }
+
+        public int getCode() {
+            return code;
+        }
+
+        public void setCode(int code) {
+            this.code = code;
+        }
+
+        @Nullable
+        @Override
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public String toString() {
+            return "ResponseThrowable{" +
+                    "code=" + code +
+                    ", message='" + message + '\'' +
+                    '}';
+        }
     }
 
+    /**
+     * 异常处理
+     * @param e 异常
+     * @return ResponseThrowable
+     */
     public static ResponseThrowable handleException(Throwable e) {
         ResponseThrowable ex;
         if (e instanceof HttpException) {
             ex = new ResponseThrowable(ERROR.HTTP_ERROR, e);
-            ex.message = "网络错误";
+            ex.setMessage("网络错误");
         } else if (e instanceof ServerThrowable) {
             ServerThrowable serverThrowable = (ServerThrowable) e;
             ex = new ResponseThrowable(serverThrowable.code, e);
@@ -62,19 +98,19 @@ public class ErrorHandler {
                 || e instanceof JSONException
                 || e instanceof ParseException) {
             ex = new ResponseThrowable(ERROR.PARSE_ERROR, e);
-            ex.message = "解析错误";
+            ex.setMessage("解析错误");
         } else if (e instanceof ConnectException) {
             ex = new ResponseThrowable(ERROR.NETWORK_ERROR, e);
-            ex.message = "解析错误";
+            ex.setMessage("解析错误");
         }  else if (e instanceof SSLException) {
             ex = new ResponseThrowable(ERROR.SSL_ERROR, e);
-            ex.message = "证书验证失败";
+            ex.setMessage("证书验证失败");
         }  else if (e instanceof ConnectTimeoutException) {
             ex = new ResponseThrowable(ERROR.TIMEOUT_ERROR, e);
-            ex.message = "连接超时";
+            ex.setMessage("连接超时");
         } else {
             ex = new ResponseThrowable(ERROR.UNKNOWNS_ERROR, e);
-            ex.message = "未知错误";
+            ex.setMessage("未知错误");
         }
         return ex;
     }
