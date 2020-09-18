@@ -13,6 +13,7 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -23,6 +24,9 @@ public abstract class NetworkApi {
 
     private static final String TAG = "NetworkApi";
 
+    /**
+     * 包含版本号/是否是Debug/Context
+     */
     public static INetworkRequiredInfo networkRequiredInfo;
     private static OkHttpClient okHttpClient;
 
@@ -42,7 +46,7 @@ public abstract class NetworkApi {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl(getBaseUrl())
-                    .callFactory(getOkHttpClient())
+                    .callFactory(getOkHttpClient(getInterceptor()))
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
@@ -84,8 +88,9 @@ public abstract class NetworkApi {
      * 获取OkHttpClient
      *
      * @return OkHttpClient
+     * @param interceptor
      */
-    public static OkHttpClient getOkHttpClient() {
+    public static OkHttpClient getOkHttpClient(Interceptor interceptor) {
         if (okHttpClient != null) {
             return okHttpClient;
         }
@@ -96,8 +101,10 @@ public abstract class NetworkApi {
             httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             builder.addNetworkInterceptor(httpLoggingInterceptor);
         }
-        // 添加通用请求拦截器
-        builder.addInterceptor(new CommonRequestInterceptor(networkRequiredInfo));
+        // 添加自定义请求拦截器
+        if (interceptor != null) {
+            builder.addInterceptor(interceptor);
+        }
         // 添加阿里DNS
         builder.dns(new AliDNS());
         okHttpClient = builder.build();
@@ -118,4 +125,11 @@ public abstract class NetworkApi {
      * @return
      */
     protected abstract <T> Function<T, T> getAppErrorHandler();
+
+    /**
+     * 获取自定义Interceptor
+     *
+     * @return Interceptor
+     */
+    protected abstract Interceptor getInterceptor();
 }
