@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+
+    <!--允许使用明文流量(HTTP)-->
     <base-config cleartextTrafficPermitted="true" />
 
+    <!--指定域名设置-->
     <domain-config>
+        <!--包含子域名-->
         <domain includeSubdomains="true">
             restapi.amap.com
         </domain>
+        <!--信任的证书-->
         <trust-anchors>
-            <certificates src="user" />
+            <!--<certificates src="user" />-->
             <certificates src="system" />
         </trust-anchors>
 
@@ -16,6 +21,12 @@
             <pin digest="SHA-256">//6WD2EQVJUtFa3zd+7JlFZtf5NYejXZI/qmPKSZsY5I=</ pin>
             <pin digest="SHA-256">/IQBnNBEiFuhj+8x6X8XLgh01V9Ic5/V3IRQLNFFc7v4=</ pin>
         </pin-set>-->
-
     </domain-config>
+
+    <!--debug下才开启用户CA信任-->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
 </network-security-config>

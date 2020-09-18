@@ -101,7 +101,7 @@ public class ErrorHandler {
             ex.setMessage("解析错误");
         } else if (e instanceof ConnectException) {
             ex = new ResponseThrowable(ERROR.NETWORK_ERROR, e);
-            ex.setMessage("解析错误");
+            ex.setMessage("连接异常");
         }  else if (e instanceof SSLException) {
             ex = new ResponseThrowable(ERROR.SSL_ERROR, e);
             ex.setMessage("证书验证失败");
